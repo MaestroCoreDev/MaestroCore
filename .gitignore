@@ -1,0 +1,35 @@
+# 忽略规则：把密钥、用户的谱面、副产物、homr 本体都挡在仓库外
+__pycache__/
+*.pyc
+*.pyo
+
+# 密钥：千万别进仓库
+ai_module/api_key.txt
+api_key.txt
+*.key
+*APIKey*.txt
+*API Key*.txt
+
+# 兑换码生成密钥与本地解锁状态
+theme_module/_salt.txt
+theme_module/theme_config.json
+
+# 用户谱面与运行产物
+scores/
+temp_debug/
+history/
+ai_result.json
+*.musicxml
+*.mxl
+page*_rectified.png
+*_rectified.png
+*_teaser.png
+
+# homr 本体（2.6 万行 + 159 MB 权重），用安装说明或 submodule 引入
+homr_module/homr-main/
+
+# 编辑器/系统杂项
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
