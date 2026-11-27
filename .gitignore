@@ -33,3 +33,9 @@ homr_module/homr-main/
 .idea/
 Thumbs.db
 desktop.ini
+
+# 谱面样张（版权原因不进仓库）
+test.png
+
+frontend_module/_offline/
+theme_module/.founder
