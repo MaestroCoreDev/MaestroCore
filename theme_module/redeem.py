@@ -1,4 +1,4 @@
-"""MaestroCore 主题兑换码（仿 PCL2 那套：只解锁装饰，不阀割功能）
+"""MaestroCore 主题兑换码（仿 PCL2 那套：只解锁装饰，不阉割功能）
 
 原则：核心功能人人可用，兑换码只换主题色/皮肤，不锁识别、不锁讲解、不锁节拍器。
 
@@ -35,14 +35,14 @@ BODY_LEN = 8
 CHECK_LEN = 2
 
 THEMES = {
-    "PCL 默认": "#4B7BE5",
+    "默认": "#4B7BE5",
     "青竹": "#2FA37C",
     "琥珀": "#C98A2E",
-    "暮紫": "#7A67D8",
-    "霁蓝": "#3C87C9",
+    "暯紫": "#7A67D8",
+    "霎蓝": "#3C87C9",
     "赤陶": "#C06A4E",
 }
-DEFAULT_THEME = "PCL 默认"
+DEFAULT_THEME = "默认"
 
 
 # ---------------------------------------------------------------- 码的生成与校验
@@ -99,13 +99,25 @@ def verify(code):
 
 
 # ---------------------------------------------------------------- 解锁状态
+def is_founder():
+    """创始人模式：本机放了 .founder 文件或设了 MC_FOUNDER=1，全部主题直接可用。"""
+    if os.environ.get("MC_FOUNDER") == "1":
+        return True
+    return (STATE_FILE.parent / ".founder").exists()
+
+
 def load_state():
+    state = {"unlocked": False, "code": "", "theme": DEFAULT_THEME}
     if STATE_FILE.exists():
         try:
-            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             pass
-    return {"unlocked": False, "code": "", "theme": DEFAULT_THEME}
+    if is_founder():
+        state = dict(state)
+        state["unlocked"] = True
+        state["founder"] = True
+    return state
 
 
 def save_state(state):
@@ -162,3 +174,4 @@ def main(argv):
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
+
