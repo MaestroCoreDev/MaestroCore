@@ -23,11 +23,11 @@ MODULE_DIR = pathlib.Path(__file__).resolve().parent
 if str(MODULE_DIR.parent / "theme_module") not in sys.path:
     sys.path.insert(0, str(MODULE_DIR))
 
-DEFAULT_THEME = "PCL 默认"
+DEFAULT_THEME = "默认"
 
 # 每个主题给齐同一组 token，页面只认 token、不认具体色值
 THEMES = {
-    "PCL 默认": {
+    "默认": {
         "bg": "#F2F3F5",          # 页面底
         "surface": "#FFFFFF",     # 卡片
         "surface_alt": "#F7F8FA",  # 次级块/输入框
@@ -72,7 +72,7 @@ THEMES = {
         "warning": "#C98A2E",
         "danger": "#BF5844",
     },
-    "暮紫": {
+    "暯紫": {
         "bg": "#F5F3FA",
         "surface": "#FFFFFF",
         "surface_alt": "#F2EFFA",
@@ -87,32 +87,32 @@ THEMES = {
         "warning": "#C58B3C",
         "danger": "#C05563",
     },
-    "霁蓝": {
-        "bg": "#F1F6FB",
+    "霎蓝": {
+        "bg": "#EFF8FB",
         "surface": "#FFFFFF",
-        "surface_alt": "#EEF5FC",
-        "text": "#1C2833",
-        "text_muted": "#6E8093",
-        "accent": "#3C87C9",
-        "accent_hover": "#2F71B0",
-        "accent_soft": "#E4F0FA",
+        "surface_alt": "#E8F5FA",
+        "text": "#1B2A31",
+        "text_muted": "#6A808B",
+        "accent": "#0E9BC0",
+        "accent_hover": "#0A87A8",
+        "accent_soft": "#DDF2F8",
         "on_accent": "#FFFFFF",
-        "border": "#DCE8F2",
+        "border": "#D8EDF4",
         "success": "#3E9D75",
         "warning": "#CE9440",
         "danger": "#C25A55",
     },
     "赤陶": {
-        "bg": "#FAF3F0",
+        "bg": "#FCF5F2",
         "surface": "#FFFFFF",
-        "surface_alt": "#FBF0EB",
-        "text": "#2C221F",
-        "text_muted": "#8A736C",
-        "accent": "#C06A4E",
-        "accent_hover": "#A75A41",
-        "accent_soft": "#F8E7E1",
+        "surface_alt": "#FCF0EB",
+        "text": "#2E211D",
+        "text_muted": "#8B7269",
+        "accent": "#C15E43",
+        "accent_hover": "#A94F38",
+        "accent_soft": "#FAE8E1",
         "on_accent": "#FFFFFF",
-        "border": "#EDDED7",
+        "border": "#F0DDD5",
         "success": "#5C9873",
         "warning": "#C58C3E",
         "danger": "#B94F4A",
@@ -121,7 +121,7 @@ THEMES = {
 
 
 def _current_name():
-    """没解锁就直接用 PCL 默认；解锁了再读用户选的主题。"""
+    """没解锁就直接用 默认；解锁了再读用户选的主题。"""
     try:
         from redeem import load_state
         state = load_state()
@@ -177,6 +177,13 @@ def to_css_all():
             lines.append(f"  --mc-{key.replace('_', '-')}: {value};")
         lines.append("}")
         blocks.append("\n".join(lines))
+        # 默认主题再写一份显式选择器，页面把 data-theme 设成「默认」时也认
+        if name == DEFAULT_THEME:
+            lines = [f'[data-theme="{name}"] {{']
+            for key, value in palette.items():
+                lines.append(f"  --mc-{key.replace('_', '-')}: {value};")
+            lines.append("}")
+            blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
 
 
@@ -208,3 +215,4 @@ def main(argv):
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
+
