@@ -1,0 +1,429 @@
+/* MaestroCore 灵动岛（Dynamic Island）
+ *
+ * 结构：  拍号 | − | BPM（可点开输入） | + | ⚙
+ * 玻璃：  .glass-none（无） .glass-frosted（毛玻璃） .glass-liquid（液态玻璃）
+ * 动画：  .anim-on 打开呼吸、回弹、数字滚动；关掉就是瞬时切换
+ */
+
+.island {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 54px;
+  padding: 0 8px;
+  border-radius: 27px;
+
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(255, 255, 255, .6);
+  box-shadow: var(--mc-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, .8);
+  color: var(--mc-text);
+
+  transition: width .3s cubic-bezier(.25, .1, .25, 1),
+              height .3s cubic-bezier(.25, .1, .25, 1),
+              border-radius .3s, background .25s, box-shadow .25s;
+}
+
+/* ---------------- 不用玻璃：老老实实一块白板 ---------------- */
+.island.glass-none {
+  background: #fff;
+  border-color: rgba(0, 0, 0, .1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+.island.glass-none .meter,
+.island.glass-none .step,
+.island.glass-none .gear {
+  background: #f4f5f7;
+  border-color: rgba(0, 0, 0, .08);
+}
+
+/* ---------------- 毛玻璃：糊后面的东西，不带颜色 ---------------- */
+.island.glass-frosted {
+  background: rgba(250, 251, 253, .46);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border-color: rgba(255, 255, 255, .85);
+  box-shadow:
+    0 8px 24px color-mix(in srgb, var(--mc-accent) 18%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .9),
+    inset 0 -1px 0 rgba(0, 0, 0, .04);
+}
+.island.glass-frosted::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0) 46%);
+}
+
+/* ---------------- 液态玻璃：带色偏 + 彩虹描边 + 会动的高光 ---------------- */
+.island.glass-liquid {
+  background:
+    linear-gradient(135deg,
+      rgba(255, 255, 255, .74) 0%,
+      color-mix(in srgb, var(--mc-accent) 7%, transparent) 34%,
+      color-mix(in srgb, var(--mc-accent) 8%, transparent) 66%,
+      rgba(255, 255, 255, .70) 100%);
+  backdrop-filter: blur(26px) saturate(220%) brightness(1.08);
+  -webkit-backdrop-filter: blur(26px) saturate(220%) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, .95);
+  box-shadow:
+    0 14px 36px color-mix(in srgb, var(--mc-accent) 34%, transparent),
+    0 0 0 1px rgba(255, 255, 255, .55),
+    0 0 26px color-mix(in srgb, var(--mc-accent) 6%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, 1),
+    inset 0 -10px 20px color-mix(in srgb, var(--mc-accent) 7%, transparent);
+  overflow: visible;
+}
+
+/* 流动的光斑（就是它让液态玻璃和毛玻璃一眼能分出来） */
+.island.glass-liquid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 round 999px);
+  pointer-events: none;
+  background:
+    radial-gradient(58% 76% at 20% 6%, rgba(255, 255, 255, .95), transparent 62%),
+    radial-gradient(46% 62% at 84% 98%, color-mix(in srgb, var(--mc-accent) 9%, transparent), transparent 66%),
+    radial-gradient(40% 54% at 60% 20%, color-mix(in srgb, var(--mc-accent) 6%, transparent), transparent 70%),
+    conic-gradient(from 210deg at 50% 50%,
+      color-mix(in srgb, var(--mc-accent) 4%, transparent), color-mix(in srgb, var(--mc-accent) 3%, transparent) 22%,
+      color-mix(in srgb, var(--mc-accent) 4%, transparent) 42%, color-mix(in srgb, var(--mc-accent) 4%, transparent) 62%,
+      color-mix(in srgb, var(--mc-accent) 4%, transparent) 82%, color-mix(in srgb, var(--mc-accent) 4%, transparent));
+  mix-blend-mode: screen;
+  filter: blur(1px);
+}
+
+/* 彩虹描边：拿 conic-gradient 当边框光 */
+.island.glass-liquid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  background: conic-gradient(from 0deg,
+    color-mix(in srgb, var(--mc-accent) 14%, transparent), color-mix(in srgb, var(--mc-accent) 14%, transparent), color-mix(in srgb, var(--mc-accent) 14%, transparent),
+    color-mix(in srgb, var(--mc-accent) 14%, transparent), color-mix(in srgb, var(--mc-accent) 14%, transparent), color-mix(in srgb, var(--mc-accent) 14%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: .75;
+}
+
+/* 高光缓慢游动（关掉动画就静止） */
+.island.glass-liquid.anim-on::before {
+  animation: mc-liquid-sway 9s ease-in-out infinite alternate;
+}
+@keyframes mc-liquid-sway {
+  from { transform: translate3d(-5%, -3%, 0) rotate(-3deg); }
+  to   { transform: translate3d(5%, 3%, 0) rotate(3deg); }
+}
+
+/* ---------------- 内部件 ---------------- */
+.island .meter {
+  height: 34px;
+  min-width: 62px;
+  padding: 0 10px;
+  border-radius: 17px;
+  border: 1px solid rgba(0, 0, 0, .06);
+  background: rgba(255, 255, 255, .5);
+  color: var(--mc-text);
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: .02em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  user-select: none;
+  transition: background .18s, transform .18s;
+}
+.island .meter:hover { background: rgba(255, 255, 255, .8); }
+.island .meter .caret { font-size: 9px; opacity: .5; }
+
+.island .step {
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  border: 1px solid rgba(0, 0, 0, .06);
+  background: rgba(255, 255, 255, .5);
+  color: var(--mc-text);
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background .16s, transform .12s;
+}
+.island .step:hover { background: rgba(255, 255, 255, .85); }
+.island .step:active { transform: scale(.94); }
+
+.island .bpm-wrap { position: relative; min-width: 92px; height: 42px; display: flex; align-items: center; justify-content: center; }
+
+.island .bpm {
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: var(--mc-text);
+  cursor: text;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  user-select: none;
+  transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), color .18s;
+}
+.island .bpm small { font-size: 10px; font-weight: 400; color: var(--mc-text-muted); letter-spacing: .08em; }
+.island .bpm:hover { color: var(--mc-accent); }
+
+/* 数字输入状态 */
+.island input.bpm-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 4px;
+  border: none;
+  outline: none;
+  text-align: center;
+  background: rgba(255, 255, 255, .92);
+  border-radius: 12px;
+  font-family: Consolas, monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--mc-accent);
+  box-shadow: inset 0 0 0 1px var(--mc-accent);
+}
+
+.island .gear {
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  border: 1px solid rgba(0, 0, 0, .06);
+  background: rgba(255, 255, 255, .5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--mc-text-muted);
+  transition: background .16s, color .16s, transform .3s;
+}
+.island .gear:hover { background: rgba(255, 255, 255, .9); color: var(--mc-text); }
+.island .gear:active { transform: rotate(45deg); }
+
+/* 拍号选择小面板 */
+.island .meter { position: relative; }
+.island .meter-pop {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  display: none;
+  padding: 8px;
+  gap: 6px;
+  flex-direction: column; flex-wrap: nowrap; width: auto; min-width: 78px;
+  border-radius: 16px;
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-border);
+  box-shadow: var(--mc-shadow-lg);
+  z-index: 70;
+}
+.island .meter-pop.open { display: flex; }
+.island .meter-pop button { padding: 5px 10px; font-size: 12px; border-radius: 9px; }
+.island .meter-pop button.on {
+  background: var(--mc-accent);
+  border-color: var(--mc-accent);
+  color: var(--mc-on-accent);
+}
+
+/* ---------------- 动画 ---------------- */
+/* 加减只要数字变，不跳动、不闪光（有人嫌闪） */
+.island.anim-on .bpm.bump { animation: none; }
+
+@keyframes mc-breathe {
+  0%, 100% { box-shadow: var(--mc-shadow-lg), inset 0 1px 0 rgba(255,255,255,.8); }
+  50% { box-shadow: 0 16px 44px color-mix(in srgb, var(--mc-accent) 23%, transparent), inset 0 1px 0 rgba(255,255,255,.9); }
+}
+.island.anim-on.running { animation: mc-breathe 2.6s ease-in-out infinite; }
+
+/* 那个闪一下的小圆点去掉了：在 BPM 右上角太碍眼，运行状态看播放键就够 */
+
+/* 降低动态效果的用户偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .island.anim-on.running { animation: none; }
+  .island .bpm.bump { transform: none; }
+}
+
+/* 手机窄屏 */
+@media (max-width: 520px) {
+  .island { height: 48px; border-radius: 24px; gap: 4px; }
+  .island .bpm { font-size: 22px; }
+  .island .step, .island .gear, .island .meter { height: 30px; width: 30px; border-radius: 15px; }
+  .island .meter { min-width: 54px; font-size: 12px; }
+}
+
+/* ---------------- 岛上的播放键 ---------------- */
+.island .play {
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--mc-accent);
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(0, 0, 0, .05);
+  transition: background .18s, transform .18s, color .18s;
+  flex: 0 0 auto;
+}
+.island .play:hover { transform: scale(1.06); background: var(--mc-accent); color: #fff; }
+.island .play:active { transform: scale(.94); }
+.island .play .ico-pause { display: none; }
+.island.playing .play { background: var(--mc-accent); color: #fff; }
+.island.playing .play .ico-play { display: none; }
+.island.playing .play .ico-pause { display: block; }
+
+/* ---------------- 岛上每个键都要有悬浮 ---------------- */
+.island .meter,
+.island .step,
+.island .gear,
+.island .play,
+.island .bpm {
+  transition: background .16s ease, transform .16s ease, color .16s ease, box-shadow .2s ease;
+}
+.island .meter:hover,
+.island .gear:hover {
+  background: var(--mc-accent-soft);
+  color: var(--mc-accent);
+  transform: translateY(-1px);
+}
+.island .step:hover {
+  background: var(--mc-accent);
+  color: #fff;
+  transform: translateY(-1px) scale(1.04);
+}
+.island .bpm:hover { color: var(--mc-accent); }
+.island .bpm:hover .num { text-decoration: underline dotted rgba(0, 0, 0, .25); }
+
+/* 拍号下拉：一列、一行一个 */
+.island .meter-pop { min-width: 84px; padding: 6px; gap: 2px; }
+.island .meter-pop button {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--mc-text);
+}
+.island .meter-pop button:hover {
+  background: var(--mc-accent-soft);
+  color: var(--mc-accent);
+  transform: translateX(2px);
+}
+.island .meter-pop button.on {
+  background: var(--mc-accent);
+  border-color: var(--mc-accent);
+  color: var(--mc-on-accent);
+}
+
+/* 岛也跟着变淡，不然整页白了只有它一个花里胡哨 */
+.island.glass-frosted { background: rgba(255, 255, 255, .68); }
+.island.glass-liquid {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, .88) 0%,
+    color-mix(in srgb, var(--mc-accent) 10%, transparent) 48%,
+    color-mix(in srgb, var(--mc-accent) 12%, transparent) 100%);
+  box-shadow:
+    0 10px 26px color-mix(in srgb, var(--mc-accent) 21%, transparent),
+    0 0 0 1px rgba(255, 255, 255, .7),
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    inset 0 -6px 14px color-mix(in srgb, var(--mc-accent) 5%, transparent);
+}
+.island.glass-liquid::before { opacity: .6; }
+.island.glass-liquid::after { opacity: .5; }
+
+/* 拍号下拉：中心点对齐 + 展开动画（覆盖前面的 left:0 / display:none） */
+.island .meter-pop {
+  display: flex;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px) scaleY(.94);
+  transform-origin: top center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .22s cubic-bezier(.2, .8, .3, 1.15);
+}
+.island .meter-pop.open {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scaleY(1);
+}
+
+/* ===== 液态玻璃收敛：不要彩虹边、不要五彩光斑，只留一层清亮的水感 ===== */
+.island.glass-liquid {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, .88) 0%,
+    color-mix(in srgb, var(--mc-accent) 10%, transparent) 52%,
+    rgba(255, 255, 255, .84) 100%);
+  backdrop-filter: blur(24px) saturate(165%) brightness(1.03);
+  -webkit-backdrop-filter: blur(24px) saturate(165%) brightness(1.03);
+  border: 1px solid rgba(255, 255, 255, .92);
+  box-shadow:
+    0 10px 26px color-mix(in srgb, var(--mc-accent) 18%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, 1),
+    inset 0 -8px 18px rgba(255, 255, 255, .32);
+}
+.island.glass-liquid::before {
+  background:
+    radial-gradient(56% 88% at 16% -6%, rgba(255, 255, 255, .95), transparent 66%),
+    radial-gradient(46% 72% at 88% 104%, color-mix(in srgb, var(--mc-accent) 16%, transparent), transparent 72%);
+  mix-blend-mode: normal;
+  filter: blur(2px);
+  opacity: .85;
+}
+.island.glass-liquid::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, .18) 46%, rgba(255, 255, 255, .5));
+  opacity: .55;
+}
+
+/* 数字不再上下位移，只做一次强调色闪亮 */
+.island .bpm { cursor: default; }
+
+/* ---------- 尺寸回到原来的 54px，整体往下挪一个岛高，不再压住导航 ---------- */
+.island { top: 68px; height: 54px; padding: 0 8px; }
+
+/* ---------- 拍号：去掉那个小箭头，数字正中央，和下面的元素对齐 ---------- */
+.island .meter { justify-content: center; padding: 0 12px; min-width: 58px; }
+.island .meter .caret { display: none; }
+
+/* ---------- 拍号：去掉那个小箭头，数字正中央，和下面的元素对齐 ---------- */
+.island .meter { justify-content: center; padding: 0 12px; min-width: 58px; }
+.island .meter .caret { display: none; }
+
+/* ---------- 岛改成随页面滚动：往下滚它就跟着走，不再死钉在顶上挡视线 ---------- */
+.island {
+  position: absolute;      /* 原来是 fixed，永远挂在视口 */
+  top: 68px;
+}
+/* 悬浮感再明显一点：更深的投影 + 顶部高光，和卡片拉开层次 */
+.island {
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--mc-accent) 21%, transparent), 0 2px 8px color-mix(in srgb, var(--mc-accent) 8%, transparent),
+              inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+.island:hover { box-shadow: 0 18px 42px color-mix(in srgb, var(--mc-accent) 26%, transparent), 0 3px 10px color-mix(in srgb, var(--mc-accent) 10%, transparent),
+              inset 0 1px 0 rgba(255, 255, 255, .95); }
+
+
