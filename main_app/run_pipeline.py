@@ -99,7 +99,7 @@ def run_pipeline(input_paths=None, tempo_spec=None, instrument=None, provider="d
     missing = [p for p in input_paths if not os.path.exists(p)]
     if missing:
         print(f"找不到这些图片：{missing}")
-        return
+        return None
 
     page_count = len(input_paths)
     print(f"本次共有 {page_count} 页谱子：{[os.path.basename(p) for p in input_paths]}")
@@ -160,7 +160,7 @@ def run_pipeline(input_paths=None, tempo_spec=None, instrument=None, provider="d
                     print("      " + line)
             except OSError:
                 pass
-        return
+        return None
 
     # --- 步骤 3：豆包 AI 讲解（读刚识别出的 XML，出练琴方案）---
     print(f"\n>>> [模块 3/3] 启动 AI 谱面讲解（{provider}）...")
@@ -169,7 +169,8 @@ def run_pipeline(input_paths=None, tempo_spec=None, instrument=None, provider="d
         from ai_analyzer import analyze_music_with_ai
         # 速度 OCR 必须用矫正后的图，坐标才和 homr 记下的一致
         payload = analyze_music_with_ai(result_xml, provider, tempo_spec=tempo_spec,
-                                        image_path=rectified_paths[0], instrument=instrument)
+                                        image_path=rectified_paths[0], instrument=instrument,
+                                        image_paths=list(rectified_paths))
     except Exception as exc:
         print(f"[模块 3] 跳过 AI 讲解：{exc}")
 
@@ -186,6 +187,7 @@ def run_pipeline(input_paths=None, tempo_spec=None, instrument=None, provider="d
     print("\n========================================")
     print("           MaestroCore 运行结束         ")
     print("========================================")
+    return payload
 
 
 if __name__ == "__main__":
