@@ -139,7 +139,7 @@ class Metronome:
         if not self.plan:
             return
         seg = self.plan[self.plan_index]
-        self.bpm = float(max(MIN_BPM, min(MAX_BPM, seg.get("bpm", self.bpm)))
+        self.bpm = float(max(MIN_BPM, min(MAX_BPM, seg.get("bpm", self.bpm))))
         self.beats = int(seg.get("beats", self.beats)) or 4
         self.beat_type = int(seg.get("beat_type", self.beat_type)) or 4
         self.measure = int(seg.get("start_measure", 1))
@@ -350,8 +350,8 @@ def run_gui(plan=None, title=""):
 
     tk.Label(root, text="空格 启动/暂停　←→ 调速　T 测速", bg=C["bg"], fg=C["muted"],
              font=("Microsoft YaHei", 8)).pack(side="bottom", pady=4)
-    root.bind("<Left>", lambda e: (metro.nudge_bpm(-1), bpm_var.set(str(int(metro.bpm))))) 
-    root.bind("<Right>", lambda e: (metro.nudge_bpm(1), bpm_var.set(str(int(metro.bpm))))) 
+    root.bind("<Left>", lambda e: (metro.nudge_bpm(-1), bpm_var.set(str(int(metro.bpm)))))
+    root.bind("<Right>", lambda e: (metro.nudge_bpm(1), bpm_var.set(str(int(metro.bpm)))))
     root.bind("<t>", lambda e: bpm_var.set(str(metro.tap())))
 
     if plan:
