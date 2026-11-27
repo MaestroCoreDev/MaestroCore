@@ -231,8 +231,73 @@ def _normalize(result, summary):
     return result
 
 
+def _align_plan_to_tempo(result, summary):
+    """谱面速度已经识别出来了，节拍器分段就不许再用 AI 猜的数。
+
+    按 tempo_map 把每段的小节号和速度校正成谱面真值，AI 只保留它的练习提示。
+    """
+    tempos = summary.get("tempo_map") or []
+    total = int(summary.get("total_measures") or 0)
+    if len(tempos) < 2 or not total:
+        return result
+
+    segs = []
+    for i, t in enumerate(tempos):
+        start = int(t["measure"])
+        end = int(tempos[i + 1]["measure"]) - 1 if i + 1 < len(tempos) else total
+        if end < start:
+            continue
+        segs.append({"start_measure": start, "end_measure": end, "bpm": int(round(t["bpm"]))})
+
+    old = result.get("metronome_plan") or []
+    plan = []
+    for seg in segs:
+        tip = None
+        for item in old:
+            a = int(item.get("start_measure", 1))
+            b = int(item.get("end_measure", 1))
+            overlap = min(b, seg["end_measure"]) - max(a, seg["start_measure"]) + 1
+            if overlap > 0 and (tip is None or overlap > tip[0]):
+                tip = (overlap, item)
+        entry = dict(tip[1]) if tip else {}
+        entry.update({"start_measure": seg["start_measure"],
+                      "end_measure": seg["end_measure"],
+                      "bpm": seg["bpm"]})
+        entry.setdefault("beats", 4)
+        entry.setdefault("beat_type", 4)
+        plan.append(entry)
+
+    result["metronome_plan"] = plan
+    result["tempo_basis"] = "谱面速度（版面分析）"
+    print("    [分段] 按谱面真值重排：" + "；".join(
+        f"{p['start_measure']}-{p['end_measure']} {p['bpm']}BPM" for p in plan))
+    return result
+
+
+def _tempo_from_layout(page_paths):
+    """版面分析版速度识别：谱行 → 小节线 → 小节号 → 速度标记落位。
+
+    homr 不吐 imgpos，靠坐标落小节的老办法全部塌到第 1 小节，这里自己算。
+    返回 (marks, total_measures) 或 (None, 0)。
+    """
+    if not page_paths:
+        return None, 0
+    try:
+        from tempo_map import build_tempo_map
+        marks, info = build_tempo_map(page_paths)
+    except Exception as exc:  # noqa: BLE001
+        print(f"    [速度] 版面分析跳过：{exc}")
+        return None, 0
+    total = int(info.get("total_measures") or 0)
+    # 至少两处速度、且小节数看起来合理，才认为这次版面分析是成功的
+    if len(marks) < 2 or total < 10:
+        return None, 0
+    return marks, total
+
+
 def analyze_music_with_ai(xml_path=None, model_name="doubao", save=True,
-                          tempo_spec=None, image_path=None, instrument=None):
+                          tempo_spec=None, image_path=None, instrument=None,
+                          image_paths=None):
     """Homr 出了 XML 就能直接跑。返回 {source_file, summary, ai}。
 
     tempo_spec：人工指定速度，格式 "1:96,13:120"，优先级最高；
@@ -280,20 +345,50 @@ def analyze_music_with_ai(xml_path=None, model_name="doubao", save=True,
             if debug_owner and debug_store:
                 debug_store.end_session()
             return None
-    elif image_path and os.path.exists(image_path):
-        try:
-            from tempo_ocr import detect_tempos, tempos_to_spec
-            tempos = detect_tempos(image_path, summary)
-            if tempos:
-                summary = apply_tempo_override(summary, tempos_to_spec(tempos))
-                summary["tempo_ocr"] = tempos
-                print("    [速度] 从谱面自动识别：" + "；".join(
-                    f"第 {t['measure']} 小节起 {int(t['bpm'])} BPM（{t['text']}，{t['source']}）"
-                    for t in tempos))
-            else:
-                print("    [速度] 谱面没识别到速度标记，沿用 homr 默认 120")
-        except Exception as exc:
-            print(f"    [速度] 自动识别跳过：{exc}")
+    else:
+        pages = list(image_paths or [])
+        if not pages and image_path and os.path.exists(image_path):
+            pages = [image_path]
+        marks, layout_total = _tempo_from_layout(pages)
+        if marks:
+            # 谱面版式自己数出来的小节数比 homr 靠谱（homr 会把多小节休止当成小节）
+            if layout_total:
+                summary["total_measures"] = layout_total
+            summary = apply_tempo_override(summary, ",".join(
+                f"{int(m['measure'])}:{int(round(m['bpm']))}" for m in marks))
+            summary["tempo_source"] = "image"
+            summary["tempo_ocr"] = marks
+            summary["tempo_note"] = "按谱面版式定位到小节（版面分析，不需要 homr 坐标）"
+            print("    [速度] 版面分析识别：" + "；".join(
+                f"第 {m['measure']} 小节起 {int(m['bpm'])} BPM（{m['text']}）" for m in marks))
+            # 拍子骨架：空拍（整小节休止）/ 起拍（弱起），给节拍器和界面用
+            try:
+                from score_structure import analyze as _structure
+                structure = _structure(pages)
+                summary["structure"] = structure
+                if structure.get("pickup"):
+                    print(f"    [拍子] 开头是起拍：约 {structure['pickup']['beats']} 拍")
+                if structure.get("empty"):
+                    print("    [拍子] 整小节空拍：" + "、".join(
+                        f"{r['from']}–{r['to']}" if r["to"] != r["from"] else str(r["from"])
+                        for r in structure["empty"]))
+            except Exception as exc:
+                print(f"    [拍子] 结构分析跳过：{exc}")
+        elif image_path and os.path.exists(image_path):
+            try:
+                from tempo_ocr import detect_tempos, tempos_to_spec
+                tempos = detect_tempos(image_path, summary)
+                if tempos:
+                    summary = apply_tempo_override(summary, tempos_to_spec(tempos))
+                    summary["tempo_ocr"] = tempos
+                    summary["tempo_source"] = "ocr"
+                    print("    [速度] 从谱面自动识别：" + "；".join(
+                        f"第 {t['measure']} 小节起 {int(t['bpm'])} BPM（{t['text']}，{t['source']}）"
+                        for t in tempos))
+                else:
+                    print("    [速度] 谱面没识别到速度标记，沿用 homr 默认 120")
+            except Exception as exc:
+                print(f"    [速度] 自动识别跳过：{exc}")
 
     print(f"    {summary['title']}｜{summary['total_measures']} 小节｜"
           f"{summary['total_notes']} 音符｜约 {summary['estimated_duration_sec']} 秒")
@@ -322,6 +417,31 @@ def analyze_music_with_ai(xml_path=None, model_name="doubao", save=True,
         return None
 
     result = _normalize(result, summary)
+
+    # 谱面速度是真值：小节分段和 BPM 一律按它来，AI 的 BPM 只当参考
+    if summary.get("tempo_source") in ("image", "manual"):
+        result = _align_plan_to_tempo(result, summary)
+
+    # 只在谱面真没读出速度（0 或 1 个标记、也不是版面分析/手填）时，才拿 AI 的分段兜底
+    if summary.get("tempo_source") not in ("image", "manual") \
+            and len(summary.get("tempo_ocr") or []) <= 1 and not tempo_spec:
+        plan = result.get("metronome_plan") or []
+        total = summary.get("total_measures") or 0
+        covered = bool(plan) and int(plan[0].get("start_measure", 1)) == 1 \
+            and int(plan[-1].get("end_measure", 0)) >= total
+        if covered:
+            spec = ",".join(
+                f"{int(p['start_measure'])}:{int(p['bpm'])}" for p in plan)
+            try:
+                summary = apply_tempo_override(summary, spec)
+                summary["tempo_source"] = "ai"
+                summary["tempo_note"] = "谱面速度标记不完整，按 AI 判断的段落速度"
+                print("    [速度] 谱面没写清楚，改用 AI 的分段速度："
+                      + "；".join(f"{p['start_measure']}-{p['end_measure']} 小节 {p['bpm']}BPM"
+                                  for p in plan))
+            except ValueError as exc:
+                print(f"    [速度] AI 分段速度套用失败：{exc}")
+
     payload = {
         "source_file": os.path.basename(xml_path),
         "provider": provider,
