@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MaestroCore · 设置</title>
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/island.css">
+<link rel="stylesheet" href="assets/sponsors.css">
+<style>
+  .setting-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--mc-border); }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-row .label { flex: 0 0 190px; font-size: 13px; }
+  .setting-row .label small { display: block; color: var(--mc-text-muted); font-size: 11.5px; }
+  .setting-row .ctrl { flex: 1; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .seg-btns button.on { background: var(--mc-accent); border-color: var(--mc-accent); color: var(--mc-on-accent); }
+  input[type="range"] { flex: 1; min-width: 140px; accent-color: var(--mc-accent); }
+  .sw { width: 42px; height: 24px; border-radius: 12px; background: var(--mc-border); position: relative; cursor: pointer; transition: background .2s; flex: 0 0 auto; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .2s; }
+  .sw.on { background: var(--mc-accent); }
+  .sw.on::after { left: 20px; }
+  .theme-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--mc-border); border-radius: 10px; cursor: pointer; font-size: 13px; }
+  .theme-item.on { border-color: var(--mc-accent); background: var(--mc-accent-soft); }
+  .swatch { width: 16px; height: 16px; border-radius: 8px; }
+</style>
+</head>
+<body data-page="settings">
+
+<nav class="nav">
+  <div class="brand">MaestroCore</div>
+  <div class="nav-links">
+    <a href="index.html">识别</a>
+    <a href="history.html">历史</a>
+    <a href="metronome.html">节拍器</a>
+    <a href="settings.html" class="active">设置</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>设置</h1>
+  <p class="sub">这里只管外观和主题。节拍器的声音、音色、音量在<a href="metronome.html#metro-settings">节拍器页往下翻</a>。</p>
+
+  <div class="card">
+    <div class="card-head"><h2>外观</h2><span class="hint">全站生效，不只是那颗岛</span></div>
+
+    <div class="setting-row">
+      <div class="label">玻璃效果<small>液态玻璃吃显卡，卡就换毛玻璃</small></div>
+      <div class="ctrl seg-btns" id="glass-opts"></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">动画<small>呼吸、数字回弹、切页微抖</small></div>
+      <div class="ctrl"><div class="sw" id="sw-anim"></div></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">性能模式<small>关掉大面积模糊，老机器不卡</small></div>
+      <div class="ctrl"><div class="sw" id="sw-perf"></div></div>
+    </div>
+  </div>
+
+  <div class="card fold" id="ai-card" style="margin-top:16px">
+    <div class="card-head" id="ai-fold-head" style="margin:0;cursor:pointer;padding:18px 22px">
+      <h2>本机调试：直连模型</h2>
+      <span class="hint">没有服务端时才用</span>
+      <span class="fold-caret" style="margin-left:auto">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </div>
+    <div class="fold-body" id="ai-fold-body">
+      <div class="fold-inner">
+
+    <div class="setting-row">
+      <div class="label">平台<small>两个都支持浏览器直连</small></div>
+      <div class="ctrl seg-btns" id="ai-provider"></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">API Key<small>只存在这台浏览器的 localStorage</small></div>
+      <div class="ctrl">
+        <input type="password" id="ai-key" placeholder="ark-xxx / sk-xxx" autocomplete="off" style="flex:1;min-width:220px">
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">模型<small>留空就用默认</small></div>
+      <div class="ctrl">
+        <input type="text" id="ai-model" placeholder="doubao-seed-2-1-pro-260915" style="flex:1;min-width:220px">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="ai-save">保存</button>
+      <button class="btn" id="ai-test">测一下（花几十 token）</button>
+      <span id="ai-msg" style="font-size:12.5px;color:var(--mc-text-muted)"></span>
+    </div>
+    <p style="margin:12px 0 0;font-size:12px;color:var(--mc-text-muted)">
+      Key 存在本机浏览器里，别把填好 Key 的页面截图发出去，也别把这类页面传到仓库。
+    </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>主题与兑换码</h2><span class="hint">只换配色，功能不锁</span></div>
+    <div class="row">
+      <input type="text" id="code" placeholder="兑换码，形如 ABCD-EFGH-23" style="flex:1">
+      <button class="btn-primary fixed" id="redeem" style="flex:0 0 auto">兑换</button>
+    </div>
+    <div class="theme-list" id="theme-list" style="margin-top:14px"></div>
+    <p id="redeem-msg" style="margin:12px 0 0;font-size:12.5px;color:var(--mc-text-muted)"></p>
+  </div>
+
+  <div class="card" id="sponsor-card" style="margin-top:16px">
+    <div class="card-head">
+      <h2>赞助者</h2>
+      <span class="hint" id="sponsor-count">在爱发电支持过 MaestroCore 的人</span>
+    </div>
+
+    <div class="sponsor-tools" id="sponsor-tools" hidden>
+      <input type="text" id="sponsor-search" placeholder="搜赞助者的名字" autocomplete="off">
+      <button class="btn-ghost" id="sponsor-toggle">展开全部</button>
+    </div>
+
+    <div class="sponsor-wrap" id="sponsor-wrap">
+      <div class="sponsor-list" id="sponsor-list"></div>
+    </div>
+
+    <p class="sponsor-note" id="sponsor-note"></p>
+  </div>
+</div>
+
+<footer class="foot">MaestroCore · 兑换码只解锁主题色，识别、讲解、节拍器全部免费</footer>
+
+<script src="assets/metronome.js"></script>
+<script src="assets/island.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/direct_ai.js"></script>
+<script src="assets/settings.js"></script>
+</body>
+</html>
