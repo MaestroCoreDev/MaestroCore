@@ -142,7 +142,7 @@ def prune(keep=_MAX_KEEP):
 
 
 if __name__ == "__main__":
-    # 手动看现状 / 手动清理：py ai_module\debug_store.py [--prune]
+    # 手动看现状 / 手动清理：py ai_module\\debug_store.py [--prune]
     import sys
 
     if "--prune" in sys.argv:
