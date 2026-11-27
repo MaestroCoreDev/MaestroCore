@@ -20,8 +20,9 @@ ARK_MODEL = os.environ.get("ARK_MODEL", "doubao-seed-2-1-pro-260915")
 
 # ---------- DeepSeek（先留口子，Key 没配也能启动）----------
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-# 账号里实际可见的模型是 deepseek-v4-pro / deepseek-flash，没有老的 deepseek-chat
-DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-v4-pro")
+# 账号里实际可见的模型是 deepseek-v4-pro / deepseek-flash
+# 实测 deepseek-flash 首字 4.3s、整段 4.8s，v4-pro 要 6s 且思考 token 更多，默认用 flash
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-flash")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 
 _DESKTOP_KEY_FILE = pathlib.Path.home() / "Desktop" / "火山引擎API Key.txt"
