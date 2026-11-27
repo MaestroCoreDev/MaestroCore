@@ -139,7 +139,7 @@ class Metronome:
         if not self.plan:
             return
         seg = self.plan[self.plan_index]
-        self.bpm = float(max(MIN_BPM, min(MAX_BPM, seg.get("bpm", self.bpm))))
+        self.bpm = float(max(MIN_BPM, min(MAX_BPM, seg.get("bpm", self.bpm)))
         self.beats = int(seg.get("beats", self.beats)) or 4
         self.beat_type = int(seg.get("beat_type", self.beat_type)) or 4
         self.measure = int(seg.get("start_measure", 1))
@@ -184,11 +184,11 @@ class Metronome:
             interval = 60.0 / self.bpm
             next_tick += interval
             lag = next_tick - time.perf_counter()
-            if lag < -interval:      # 卡顿太狠就重新对表，别疯狂追赶
+            if lag < -interval:      # 卡顿太狼就重新对表，别疯狂追赶
                 next_tick = time.perf_counter() + interval
                 lag = interval
             if lag > 0:
-                # 分段睡，保证暂停/停止能立即响应
+                # 分段睡，保证暂停/停止能立刻响应
                 end = time.perf_counter() + lag
                 while time.perf_counter() < end and not self._stop.is_set():
                     time.sleep(min(0.02, max(0, end - time.perf_counter())))
@@ -350,8 +350,8 @@ def run_gui(plan=None, title=""):
 
     tk.Label(root, text="空格 启动/暂停　←→ 调速　T 测速", bg=C["bg"], fg=C["muted"],
              font=("Microsoft YaHei", 8)).pack(side="bottom", pady=4)
-    root.bind("<Left>", lambda e: (metro.nudge_bpm(-1), bpm_var.set(str(int(metro.bpm)))))
-    root.bind("<Right>", lambda e: (metro.nudge_bpm(1), bpm_var.set(str(int(metro.bpm)))))
+    root.bind("<Left>", lambda e: (metro.nudge_bpm(-1), bpm_var.set(str(int(metro.bpm))))) 
+    root.bind("<Right>", lambda e: (metro.nudge_bpm(1), bpm_var.set(str(int(metro.bpm))))) 
     root.bind("<t>", lambda e: bpm_var.set(str(metro.tap())))
 
     if plan:
