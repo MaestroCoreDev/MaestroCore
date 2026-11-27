@@ -72,7 +72,7 @@ THEMES = {
         "warning": "#C98A2E",
         "danger": "#BF5844",
     },
-    "暯紫": {
+    "暮紫": {
         "bg": "#F5F3FA",
         "surface": "#FFFFFF",
         "surface_alt": "#F2EFFA",
@@ -87,7 +87,7 @@ THEMES = {
         "warning": "#C58B3C",
         "danger": "#C05563",
     },
-    "霎蓝": {
+    "霁蓝": {
         "bg": "#EFF8FB",
         "surface": "#FFFFFF",
         "surface_alt": "#E8F5FA",
