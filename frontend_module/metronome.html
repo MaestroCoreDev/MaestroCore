@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MaestroCore · 节拍器</title>
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/island.css">
+<style>
+  .metro-stage { text-align: center; padding: 26px 20px 18px; }
+  .metro-measure { font-size: 15px; color: var(--mc-text-muted); margin-bottom: 2px; }
+  .metro-big { font-family: Consolas, monospace; font-size: 64px; font-weight: 700; color: var(--mc-accent); line-height: 1.1; }
+  .metro-big small { font-size: 12px; color: var(--mc-text-muted); font-weight: 400; letter-spacing: .1em; }
+  .dots { display: flex; justify-content: center; gap: 10px; margin: 18px 0 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 6px; background: var(--mc-surface-alt); border: 1px solid var(--mc-border); transition: transform .12s, background .12s; }
+  .dot.on { background: var(--mc-accent); border-color: var(--mc-accent); transform: scale(1.35); }
+  .dot.accent.on { background: var(--mc-danger); border-color: var(--mc-danger); }
+  .metro-seg { font-size: 12.5px; color: var(--mc-text-muted); min-height: 22px; }
+  .metro-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+  .metro-actions button { height: 44px; padding: 0 22px; }
+  .switch { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mc-text-muted); justify-content: center; margin-top: 14px; }
+  .switch input { width: 16px; height: 16px; }
+  #plan-list { position: relative; isolation: isolate; }
+  /* 会移动的那块高亮：换段时直接落到目标行，不做滑动动画 */
+  .plan-hl {
+    position: absolute; left: -12px; right: -12px; top: 0; height: 0;
+    border-radius: 10px; background: var(--mc-accent-soft);
+    opacity: 0; pointer-events: none; z-index: -1;
+  }
+  .plan-line { display: flex; align-items: center; gap: 12px; padding: 9px 0; position: relative; border-bottom: 1px dashed var(--mc-border); font-size: 13px; }
+  .plan-line:last-child { border-bottom: none; }
+  /* 悬停仍然是背后一层，选中交给上面那块滑动的色块 */
+  .plan-line::before { content: ""; position: absolute; inset: -1px -12px; border-radius: 10px; background: transparent; z-index: 0; pointer-events: none; }
+  .plan-line > * { position: relative; z-index: 1; }
+  .plan-line:hover::before { background: var(--mc-accent-soft); }
+  .plan-line:hover, .plan-line.cur { border-bottom-color: transparent; background: transparent; transform: none; box-shadow: none; }
+  .plan-line .bars { font-family: Consolas, monospace; color: var(--mc-accent); min-width: 84px; }
+</style>
+</head>
+<body data-page="metronome">
+
+<nav class="nav">
+  <div class="brand">MaestroCore</div>
+  <div class="nav-links">
+    <a href="index.html">识别</a>
+    <a href="history.html">历史</a>
+    <a href="metronome.html" class="active">节拍器</a>
+    <a href="settings.html">设置</a>
+  </div>
+  <div class="nav-right"><span class="chip" id="plan-chip">没有方案</span></div>
+</nav>
+
+<div class="page">
+  <div class="card">
+    <div class="metro-stage">
+      <div class="metro-measure" id="now-measure">准备开始</div>
+      <div class="metro-big"><span id="now-bpm">100</span><small> BPM</small></div>
+      <div class="dots" id="dots"></div>
+      <div class="metro-seg" id="seg-info">自由练习</div>
+
+      <div class="metro-actions">
+        <button class="btn-primary" id="toggle">开始</button>
+        <button id="tap">点数测速</button>
+        <button id="stop">停止</button>
+      </div>
+
+      <div class="switch">
+        <label><input type="checkbox" id="follow"> 跟随谱面（到小节边界自动换速度和拍号）</label>
+      </div>
+      <div class="metro-seg" style="margin-top:8px;font-size:12px">空格 启停　↑↓ 调速　T 测速</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>练习方案</h2>
+      <span class="hint" id="plan-hint">来自最近一次识别结果</span>
+    </div>
+    <div id="plan-list"><div class="empty">还没有方案，先去识别一次谱子。</div></div>
+    <div id="structure-line" style="margin-top:12px;font-size:12px;color:var(--mc-text-muted)"></div>
+  </div>
+
+  <div class="card" id="metro-settings" style="scroll-margin-top:86px">
+    <div class="card-head">
+      <h2>节拍器设置</h2>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">整曲基础速度<small>谱面速度没读准时，填谱子上 ♩= 的数字（比如 170），各段按同比例放大</small></div>
+      <div class="ctrl">
+        <input type="number" id="tempo-base" min="20" max="300" step="1" placeholder="跟随识别的分段"
+               style="width:132px;padding:7px 10px;border-radius:10px;border:1px solid var(--mc-border);background:var(--mc-surface);color:var(--mc-text)">
+        <button id="tempo-base-apply">应用</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">变拍表<small>哪一小节起换拍号，写成 2:3/4, 5:2/4（小节:拍数/拍值），不改就按 4/4</small></div>
+      <div class="ctrl">
+        <input type="text" id="meter-map" placeholder="2:3/4, 4:2/4"
+               style="width:190px;padding:7px 10px;border-radius:10px;border:1px solid var(--mc-border);background:var(--mc-surface);color:var(--mc-text)">
+        <button id="meter-map-apply">应用</button>
+        <span id="meter-map-tip" style="font-size:12px;color:var(--mc-text-muted)"></span>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">无限延长<small>哪些小节有 𝄐（逗号隔开，比如 3, 152），每个延长多算几拍</small></div>
+      <div class="ctrl">
+        <input type="text" id="fermata-measures" placeholder="3, 152"
+               style="width:120px;padding:7px 10px;border-radius:10px;border:1px solid var(--mc-border);background:var(--mc-surface);color:var(--mc-text)">
+        <span style="font-size:12px;color:var(--mc-text-muted)">多算</span>
+        <input type="number" id="fermata-beats" min="0" max="16" step="1" value="2"
+               style="width:64px;padding:7px 8px;border-radius:10px;border:1px solid var(--mc-border);background:var(--mc-surface);color:var(--mc-text)">
+        <span style="font-size:12px;color:var(--mc-text-muted)">拍</span>
+        <button id="fermata-apply">应用</button>
+        <span id="fermata-tip" style="font-size:12px;color:var(--mc-text-muted)"></span>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">总开关<small>关掉就只闪灯不响</small></div>
+      <div class="ctrl"><div class="sw" id="sw-sound"></div></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">每小节第一拍重音<small>“咚—哒—哒—哒”</small></div>
+      <div class="ctrl"><div class="sw" id="sw-accent"></div></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">重音音色<small>第一拍</small></div>
+      <div class="ctrl seg-btns" id="accent-sounds"></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">弱拍音色<small>其余拍子</small></div>
+      <div class="ctrl seg-btns" id="weak-sounds"></div>
+    </div>
+
+    <div class="setting-row">
+      <div class="label">音量<small>拖动即时生效</small></div>
+      <div class="ctrl">
+        <input type="range" id="volume" min="0" max="100" step="1">
+        <span id="volume-val" style="font-family:Consolas,monospace;width:44px">80%</span>
+        <button id="preview">试听</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">MaestroCore · 声音走 Web Audio，节拍精度按 120ms 预排，不抖</footer>
+
+<script src="assets/island.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/metronome.js"></script>
+<script src="assets/player.js"></script>
+<script src="assets/metro_settings.js"></script>
+</body>
+</html>
