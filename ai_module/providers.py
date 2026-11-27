@@ -76,14 +76,14 @@ def _post_stream(url, headers, body, timeout, retries, provider):
             last_err = f"{provider} 网络错误: {exc}"
 
         if attempt < retries:
-            wait = 2 ** attempt
+            wait = min(4, 1 + attempt)
             print(f"[重试 {attempt}/{retries - 1}] {last_err}，{wait} 秒后再试")
             time.sleep(wait)
 
     raise RuntimeError(f"{provider} 调用失败：{last_err}")
 
 
-def ask_doubao(system, user, timeout=150, retries=3):
+def ask_doubao(system, user, timeout=90, retries=2):
     headers = {
         "Authorization": f"Bearer {load_api_key()}",
         "Content-Type": "application/json",
@@ -95,14 +95,16 @@ def ask_doubao(system, user, timeout=150, retries=3):
             {"role": "user", "content": user},
         ],
         "temperature": 0.3,
-        "max_tokens": 3000,
+        "max_tokens": 2400,
+        # 关掉思考模式：实测同一句话 23s -> 5s，reasoning_tokens 从 751 降到 0
+        "thinking": {"type": "disabled"},
     }
     return _post_stream(
         ARK_BASE_URL + "/chat/completions", headers, body, timeout, retries, "豆包"
     )
 
 
-def ask_deepseek(system, user, timeout=150, retries=3):
+def ask_deepseek(system, user, timeout=90, retries=2):
     """DeepSeek 通道（OpenAI 兼容）。
 
     现在没配 Key，调用会明确告诉你缺什么；
@@ -127,7 +129,7 @@ def ask_deepseek(system, user, timeout=150, retries=3):
             {"role": "user", "content": user},
         ],
         "temperature": 0.3,
-        "max_tokens": 3000,
+        "max_tokens": 2400,
     }
     return _post_stream(
         DEEPSEEK_BASE_URL + "/chat/completions", headers, body, timeout, retries, "DeepSeek"
@@ -197,3 +199,4 @@ def ask_model(provider, system, user):
     if provider in ("deepseek", "ds"):
         return ask_deepseek(system, user)
     raise RuntimeError(f"不认识的模型通道：{provider}（可选：{', '.join(PROVIDERS)}）")
+
