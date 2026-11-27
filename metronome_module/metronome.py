@@ -184,7 +184,7 @@ class Metronome:
             interval = 60.0 / self.bpm
             next_tick += interval
             lag = next_tick - time.perf_counter()
-            if lag < -interval:      # 卡顿太狼就重新对表，别疯狂追赶
+            if lag < -interval:      # 卡顿太狠就重新对表，别疯狂追赶
                 next_tick = time.perf_counter() + interval
                 lag = interval
             if lag > 0:
