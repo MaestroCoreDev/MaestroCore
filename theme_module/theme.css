@@ -14,6 +14,22 @@
   --mc-danger: #D9534F;
 }
 
+[data-theme="默认"] {
+  --mc-bg: #F2F3F5;
+  --mc-surface: #FFFFFF;
+  --mc-surface-alt: #F7F8FA;
+  --mc-text: #1F2328;
+  --mc-text-muted: #7A8088;
+  --mc-accent: #4B7BE5;
+  --mc-accent-hover: #3A68D0;
+  --mc-accent-soft: #EAF1FE;
+  --mc-on-accent: #FFFFFF;
+  --mc-border: #E3E5E9;
+  --mc-success: #3FAE6A;
+  --mc-warning: #E0A54B;
+  --mc-danger: #D9534F;
+}
+
 [data-theme="青竹"] {
   --mc-bg: #F2F7F5;
   --mc-surface: #FFFFFF;
@@ -46,7 +62,7 @@
   --mc-danger: #BF5844;
 }
 
-[data-theme="暮紫"] {
+[data-theme="暯紫"] {
   --mc-bg: #F5F3FA;
   --mc-surface: #FFFFFF;
   --mc-surface-alt: #F2EFFA;
@@ -62,33 +78,33 @@
   --mc-danger: #C05563;
 }
 
-[data-theme="霁蓝"] {
-  --mc-bg: #F1F6FB;
+[data-theme="霎蓝"] {
+  --mc-bg: #EFF8FB;
   --mc-surface: #FFFFFF;
-  --mc-surface-alt: #EEF5FC;
-  --mc-text: #1C2833;
-  --mc-text-muted: #6E8093;
-  --mc-accent: #3C87C9;
-  --mc-accent-hover: #2F71B0;
-  --mc-accent-soft: #E4F0FA;
+  --mc-surface-alt: #E8F5FA;
+  --mc-text: #1B2A31;
+  --mc-text-muted: #6A808B;
+  --mc-accent: #0E9BC0;
+  --mc-accent-hover: #0A87A8;
+  --mc-accent-soft: #DDF2F8;
   --mc-on-accent: #FFFFFF;
-  --mc-border: #DCE8F2;
+  --mc-border: #D8EDF4;
   --mc-success: #3E9D75;
   --mc-warning: #CE9440;
   --mc-danger: #C25A55;
 }
 
 [data-theme="赤陶"] {
-  --mc-bg: #FAF3F0;
+  --mc-bg: #FCF5F2;
   --mc-surface: #FFFFFF;
-  --mc-surface-alt: #FBF0EB;
-  --mc-text: #2C221F;
-  --mc-text-muted: #8A736C;
-  --mc-accent: #C06A4E;
-  --mc-accent-hover: #A75A41;
-  --mc-accent-soft: #F8E7E1;
+  --mc-surface-alt: #FCF0EB;
+  --mc-text: #2E211D;
+  --mc-text-muted: #8B7269;
+  --mc-accent: #C15E43;
+  --mc-accent-hover: #A94F38;
+  --mc-accent-soft: #FAE8E1;
   --mc-on-accent: #FFFFFF;
-  --mc-border: #EDDED7;
+  --mc-border: #F0DDD5;
   --mc-success: #5C9873;
   --mc-warning: #C58C3E;
   --mc-danger: #B94F4A;
