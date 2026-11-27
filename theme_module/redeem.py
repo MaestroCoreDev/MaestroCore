@@ -38,8 +38,8 @@ THEMES = {
     "默认": "#4B7BE5",
     "青竹": "#2FA37C",
     "琥珀": "#C98A2E",
-    "暯紫": "#7A67D8",
-    "霎蓝": "#3C87C9",
+    "暮紫": "#7A67D8",
+    "霁蓝": "#3C87C9",
     "赤陶": "#C06A4E",
 }
 DEFAULT_THEME = "默认"
@@ -90,7 +90,7 @@ def verify(code):
         return False, "位数不对：兑换码是 10 位，格式像 ABCD-EFGH-23"
     body, check = raw[:BODY_LEN], raw[BODY_LEN:]
     if any(ch not in ALPHABET for ch in raw):
-        return False, "兑换码里有不认识的字符，检查一下是不是拄错了"
+        return False, "兑换码里有不认识的字符，检查一下是不是抄错了"
     try:
         salt = _salt()
     except RuntimeError:
