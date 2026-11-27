@@ -62,7 +62,7 @@
   --mc-danger: #BF5844;
 }
 
-[data-theme="暯紫"] {
+[data-theme="暮紫"] {
   --mc-bg: #F5F3FA;
   --mc-surface: #FFFFFF;
   --mc-surface-alt: #F2EFFA;
@@ -78,7 +78,7 @@
   --mc-danger: #C05563;
 }
 
-[data-theme="霎蓝"] {
+[data-theme="霁蓝"] {
   --mc-bg: #EFF8FB;
   --mc-surface: #FFFFFF;
   --mc-surface-alt: #E8F5FA;
