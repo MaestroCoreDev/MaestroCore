@@ -153,7 +153,7 @@ def _friendly_http_error(provider, status, text):
     """把常见的 HTTP 错误翻译成人话，别让人对着 402/401 干瞪眼。"""
     if status == 401:
         return (f"{provider} 的 API Key 不对或已失效（401）。"
-                f"检查 ai_module/api_key.txt 或桌面那个 Key 文件是不是拄错了。")
+                f"检查 ai_module/api_key.txt 或桌面那个 Key 文件是不是抄错了。")
     if status == 402:
         return (f"{provider} 账户余额不足（402）。去 platform.deepseek.com 充值后重试；"
                 f"这次没有产生任何扣费。")
@@ -199,4 +199,6 @@ def ask_model(provider, system, user):
     if provider in ("deepseek", "ds"):
         return ask_deepseek(system, user)
     raise RuntimeError(f"不认识的模型通道：{provider}（可选：{', '.join(PROVIDERS)}）")
+
+
 
